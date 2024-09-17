@@ -1,5 +1,8 @@
 use std::{error::Error, io};
 
+use args::Args;
+use clap::Parser;
+use dotenv::dotenv;
 use ratatui::{
     backend::{Backend, CrosstermBackend},
     crossterm::{
@@ -11,9 +14,13 @@ use ratatui::{
 };
 
 mod app;
+mod args;
 mod store;
 
 fn main() -> Result<(), Box<dyn Error>> {
+    dotenv().ok();
+    let _args = Args::parse();
+
     enable_raw_mode()?;
     let mut stdout = io::stdout();
     execute!(stdout, EnterAlternateScreen, EnableMouseCapture)?;
@@ -36,5 +43,5 @@ fn main() -> Result<(), Box<dyn Error>> {
 }
 
 fn run_app<B: Backend>(terminal: &mut Terminal<B>) {
-    // 
+    //
 }
