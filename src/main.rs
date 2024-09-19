@@ -1,4 +1,4 @@
-use std::{error::Error, io};
+use std::io;
 
 use args::Args;
 use clap::Parser;
@@ -14,21 +14,22 @@ use ratatui::{
 };
 
 use crate::config::{get_config_file, parse_config};
+use crate::error::Result;
 
 mod app;
 mod args;
 mod config;
-mod store;
 mod error;
+mod store;
 
-fn main() -> Result<(), Box<dyn Error>> {
+fn main() -> Result<()> {
     dotenv().ok();
     let _args = Args::parse();
 
     let config_file = get_config_file();
     dbg!(&config_file);
 
-    parse_config()?;
+    let _config = parse_config();
 
     enable_raw_mode()?;
     let mut stdout = io::stdout();
@@ -51,6 +52,6 @@ fn main() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-fn run_app<B: Backend>(terminal: &mut Terminal<B>) {
+fn run_app<B: Backend>(_terminal: &mut Terminal<B>) {
     //
 }
