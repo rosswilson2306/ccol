@@ -37,9 +37,7 @@ pub fn get_config_dir() -> Result<PathBuf> {
     } else if let Some(project_dirs) = ProjectDirs::from("io", "rosswilson", "ccol") {
         project_dirs.config_local_dir().to_path_buf()
     } else {
-        return Err(CcolError::MissingConfigDirectory(
-            "Unable to find config directory for ccol".to_string(),
-        ));
+        return Err(CcolError::MissingConfigDirectory);
     };
     Ok(directory)
 }
