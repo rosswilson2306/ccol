@@ -13,7 +13,7 @@ use ratatui::{
     Terminal,
 };
 
-use crate::config::{get_config_file, parse_config};
+use crate::config::parse_config;
 use crate::error::Result;
 
 mod app;
@@ -26,9 +26,7 @@ fn main() -> Result<()> {
     dotenv().ok();
     let _args = Args::parse();
 
-    let config_file = get_config_file();
-    dbg!(&config_file);
-
+    // TODO: create config file if it doesn't exist
     let _config = parse_config();
 
     enable_raw_mode()?;
