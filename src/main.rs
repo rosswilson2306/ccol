@@ -13,13 +13,22 @@ use ratatui::{
     Terminal,
 };
 
+use crate::config::{get_config_file, parse_config};
+
 mod app;
 mod args;
+mod config;
 mod store;
+mod error;
 
 fn main() -> Result<(), Box<dyn Error>> {
     dotenv().ok();
     let _args = Args::parse();
+
+    let config_file = get_config_file();
+    dbg!(&config_file);
+
+    parse_config()?;
 
     enable_raw_mode()?;
     let mut stdout = io::stdout();
