@@ -2,7 +2,7 @@ use std::{
     collections::HashMap,
     fs::File,
     io::{BufReader, Write},
-    path::{Path, PathBuf},
+    path::PathBuf,
 };
 
 use directories::ProjectDirs;
@@ -52,11 +52,9 @@ pub fn get_config_dir() -> Result<PathBuf> {
 }
 
 pub fn get_config_file() -> Result<PathBuf> {
-    let config_dir = get_config_dir()?.display().to_string();
-    let config_file_str = format!("{config_dir}/ccol.json");
-
-    let path_buf = Path::new(&config_file_str).to_path_buf();
-    Ok(path_buf)
+    let mut config_dir = get_config_dir()?;
+    config_dir.push("ccol.json");
+    Ok(config_dir)
 }
 
 #[cfg(test)]
