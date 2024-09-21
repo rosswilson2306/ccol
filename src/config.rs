@@ -75,12 +75,11 @@ mod tests {
 
     #[test]
     fn config_file_name() -> std::result::Result<(), Box<dyn Error>> {
-        let temp_dir = tempfile::tempdir()?.path().display().to_string();
-        let mut config_dir = PathBuf::from(temp_dir);
-        let config_file = get_config_file(config_dir.clone());
-        config_dir.push("ccol.json");
+        let mut temp_dir = tempfile::tempdir()?.path().to_path_buf();
+        let config_file = get_config_file(temp_dir.clone());
+        temp_dir.push("ccol.json");
 
-        assert_eq!(config_file, config_dir);
+        assert_eq!(config_file, temp_dir);
         Ok(())
     }
 }
