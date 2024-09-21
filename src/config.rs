@@ -1,14 +1,15 @@
 use std::{
     collections::HashMap,
     fs::File,
-    io::BufReader,
+    io::{BufReader, Write},
     path::{Path, PathBuf},
 };
 
 use directories::ProjectDirs;
 use serde::Deserialize;
+use serde_json::json;
 
-use crate::error::{Result, CcolError};
+use crate::error::{CcolError, Result};
 
 #[derive(Deserialize, Debug)]
 #[serde(untagged)]
@@ -19,14 +20,22 @@ pub enum Tree {
 
 pub fn parse_config() -> Result<Tree> {
     let config_path = get_config_file()?.display().to_string();
-    dbg!(&config_path);
 
-    let file = File::open(config_path)?;
+    let file = match File::open(&config_path) {
+        Ok(f) => f,
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
+            let mut new_config_file = File::create(&config_path)?;
+            let default_content = json!({});
+
+            new_config_file.write_all(default_content.to_string().as_bytes())?;
+            new_config_file.sync_all()?;
+            File::open(&config_path)?
+        }
+        Err(_) => return Err(CcolError::FileIO),
+    };
     let reader = BufReader::new(file);
 
     let contents: Tree = serde_json::from_reader(reader)?;
-
-    dbg!(&contents);
 
     Ok(contents)
 }
