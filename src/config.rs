@@ -81,6 +81,20 @@ mod tests {
     }
 
     #[test]
+    fn config_file_exists() -> std::result::Result<(), Box<dyn Error>> {
+        let temp_dir = tempfile::tempdir()?;
+        env::set_var("CCOL_CONFIG_PATH", temp_dir.path());
+
+        let config_dir = get_config_dir()?;
+
+        assert!(config_dir.exists());
+        assert!(config_dir.is_dir());
+
+        env::remove_var("CCOL_CONFIG_PATH");
+        Ok(())
+    }
+
+    #[test]
     fn config_file_name() -> std::result::Result<(), Box<dyn Error>> {
         let mut temp_dir = tempfile::tempdir()?.path().to_path_buf();
         let config_file = get_config_file(temp_dir.clone());
