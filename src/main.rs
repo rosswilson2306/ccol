@@ -2,6 +2,7 @@ use std::io;
 
 use args::Args;
 use clap::Parser;
+use config::{get_config_dir, get_config_file};
 use dotenv::dotenv;
 use ratatui::{
     backend::{Backend, CrosstermBackend},
@@ -26,8 +27,9 @@ fn main() -> Result<()> {
     dotenv().ok();
     let _args = Args::parse();
 
-    // TODO: create config file if it doesn't exist
-    let _config = parse_config();
+    let config_dir = get_config_dir()?;
+    let config_file = get_config_file(config_dir);
+    let _config = parse_config(config_file)?;
 
     enable_raw_mode()?;
     let mut stdout = io::stdout();

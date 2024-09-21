@@ -18,9 +18,7 @@ pub enum Tree {
     Branch(HashMap<String, Tree>),
 }
 
-pub fn parse_config() -> Result<Tree> {
-    let config_path = get_config_file()?.display().to_string();
-
+pub fn parse_config(config_path: PathBuf) -> Result<Tree> {
     let file = match File::open(&config_path) {
         Ok(f) => f,
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
@@ -51,10 +49,9 @@ pub fn get_config_dir() -> Result<PathBuf> {
     Ok(directory)
 }
 
-pub fn get_config_file() -> Result<PathBuf> {
-    let mut config_dir = get_config_dir()?;
+pub fn get_config_file(mut config_dir: PathBuf) -> PathBuf {
     config_dir.push("ccol.json");
-    Ok(config_dir)
+    config_dir
 }
 
 #[cfg(test)]
@@ -78,8 +75,9 @@ mod tests {
 
     #[test]
     fn config_file_name() -> std::result::Result<(), Box<dyn Error>> {
-        let mut config_dir = get_config_dir()?;
-        let config_file = get_config_file()?;
+        let temp_dir = tempfile::tempdir()?.path().display().to_string();
+        let mut config_dir = PathBuf::from(temp_dir);
+        let config_file = get_config_file(config_dir.clone());
         config_dir.push("ccol.json");
 
         assert_eq!(config_file, config_dir);
