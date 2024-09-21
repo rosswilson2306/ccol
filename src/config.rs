@@ -11,7 +11,7 @@ use serde_json::json;
 
 use crate::error::{CcolError, Result};
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, PartialEq)]
 #[serde(untagged)]
 pub enum Tree {
     Leaf(String),
@@ -101,6 +101,26 @@ mod tests {
         temp_dir.push("ccol.json");
 
         assert_eq!(config_file, temp_dir);
+        Ok(())
+    }
+
+    #[test]
+    fn parse_config_creates_file_with_default_content() -> std::result::Result<(), Box<dyn Error>> {
+        let temp_dir = tempfile::tempdir()?;
+        let temp_path = temp_dir.path().join("ccol.json");
+
+        let result = parse_config(temp_path.clone());
+
+        assert!(result.is_ok());
+        assert!(temp_path.exists());
+
+        let file = File::open(temp_path)?;
+        let reader = BufReader::new(file);
+        let contents: Tree = serde_json::from_reader(reader)?;
+        let expected: Tree = serde_json::from_value(json!({}))?;
+
+        assert_eq!(contents, expected);
+
         Ok(())
     }
 }
