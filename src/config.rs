@@ -1,6 +1,6 @@
 use std::{
     collections::HashMap,
-    fs::File,
+    fs::{self, File},
     io::{BufReader, Write},
     path::PathBuf,
 };
@@ -40,12 +40,17 @@ pub fn parse_config(config_path: PathBuf) -> Result<Tree> {
 
 pub fn get_config_dir() -> Result<PathBuf> {
     let directory = if let Ok(v) = std::env::var("CCOL_CONFIG_PATH") {
-        PathBuf::from(v)
+        PathBuf::from(v).join("ccol")
     } else if let Some(project_dirs) = ProjectDirs::from("io", "rosswilson", "ccol") {
         project_dirs.config_local_dir().to_path_buf()
     } else {
         return Err(CcolError::MissingConfigDirectory);
     };
+
+    if !directory.exists() {
+        fs::create_dir_all(&directory).map_err(|_| CcolError::FileIO)?;
+    }
+
     Ok(directory)
 }
 
@@ -67,7 +72,9 @@ mod tests {
 
         let config_dir = get_config_dir()?;
 
-        assert_eq!(config_dir, temp_dir.path());
+        let temp_confi_dir = temp_dir.path().join("ccol");
+
+        assert_eq!(config_dir, temp_confi_dir);
 
         env::remove_var("CCOL_CONFIG_PATH");
         Ok(())
