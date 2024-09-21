@@ -75,4 +75,14 @@ mod tests {
         env::remove_var("CCOL_CONFIG_PATH");
         Ok(())
     }
+
+    #[test]
+    fn config_file_name() -> std::result::Result<(), Box<dyn Error>> {
+        let mut config_dir = get_config_dir()?;
+        let config_file = get_config_file()?;
+        config_dir.push("ccol.json");
+
+        assert_eq!(config_file, config_dir);
+        Ok(())
+    }
 }
