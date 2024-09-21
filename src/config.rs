@@ -58,3 +58,23 @@ pub fn get_config_file() -> Result<PathBuf> {
     let path_buf = Path::new(&config_file_str).to_path_buf();
     Ok(path_buf)
 }
+
+#[cfg(test)]
+mod tests {
+    use std::{env, error::Error};
+
+    use super::*;
+
+    #[test]
+    fn get_config_dir_with_env() -> std::result::Result<(), Box<dyn Error>> {
+        let temp_dir = tempfile::tempdir()?;
+        env::set_var("CCOL_CONFIG_PATH", temp_dir.path());
+
+        let config_dir = get_config_dir()?;
+
+        assert_eq!(config_dir, temp_dir.path());
+
+        env::remove_var("CCOL_CONFIG_PATH");
+        Ok(())
+    }
+}
