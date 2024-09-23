@@ -7,12 +7,14 @@ use dotenv::dotenv;
 use ratatui::{
     backend::{Backend, CrosstermBackend},
     crossterm::{
-        event::{DisableMouseCapture, EnableMouseCapture},
+        event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode},
         execute,
         terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
     },
     Terminal,
 };
+use store::{AppState, CurrentScreen};
+use ui::ui;
 
 use crate::config::parse_config;
 use crate::error::Result;
@@ -22,6 +24,7 @@ mod args;
 mod config;
 mod error;
 mod store;
+mod ui;
 
 fn main() -> Result<()> {
     dotenv().ok();
@@ -38,8 +41,9 @@ fn main() -> Result<()> {
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
 
+    let mut app = AppState::new();
     // RUN APP
-    run_app(&mut terminal);
+    run_app(&mut terminal, &mut app)?;
 
     disable_raw_mode()?;
     execute!(
@@ -52,6 +56,30 @@ fn main() -> Result<()> {
     Ok(())
 }
 
-fn run_app<B: Backend>(_terminal: &mut Terminal<B>) {
-    //
+fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut AppState) -> Result<()> {
+    loop {
+        terminal.draw(|frame| ui(frame, app))?;
+
+        if let Event::Key(key) = event::read()? {
+            if key.kind == event::KeyEventKind::Release {
+                // skip events that are not KeyEventKind::Press
+                continue;
+            }
+
+            match app.current_screen {
+                CurrentScreen::Main => match key.code {
+                    KeyCode::Char('e') => {
+                        app.current_screen = CurrentScreen::Editing;
+                    }
+                    KeyCode::Char('q') => break,
+                    _ => {}
+                },
+                CurrentScreen::Editing => match key.code {
+                    _ => {}
+                },
+            }
+        }
+    }
+
+    Ok(())
 }
