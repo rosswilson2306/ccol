@@ -107,6 +107,7 @@ dependencies = [
  "serde",
  "serde_json",
  "tempfile",
+ "tui-tree-widget",
 ]
 
 [[package]]
@@ -654,6 +655,16 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn",
+]
+
+[[package]]
+name = "tui-tree-widget"
+version = "0.22.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "df0b54061d997162f225bed5d2147574af0648480214759a000e33f6cea0017a"
+dependencies = [
+ "ratatui",
+ "unicode-width",
 ]
 
 [[package]]

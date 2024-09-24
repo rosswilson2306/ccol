@@ -13,12 +13,12 @@ use crate::error::{CcolError, Result};
 
 #[derive(Deserialize, Debug, PartialEq)]
 #[serde(untagged)]
-pub enum Tree {
+pub enum CollectionTree {
     Leaf(String),
-    Branch(HashMap<String, Tree>),
+    Branch(HashMap<String, CollectionTree>),
 }
 
-pub fn parse_config(config_path: PathBuf) -> Result<Tree> {
+pub fn parse_config(config_path: PathBuf) -> Result<HashMap<String, CollectionTree>> {
     let file = match File::open(&config_path) {
         Ok(f) => f,
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
@@ -33,7 +33,7 @@ pub fn parse_config(config_path: PathBuf) -> Result<Tree> {
     };
     let reader = BufReader::new(file);
 
-    let contents: Tree = serde_json::from_reader(reader)?;
+    let contents: HashMap<String, CollectionTree> = serde_json::from_reader(reader)?;
 
     Ok(contents)
 }
@@ -116,8 +116,8 @@ mod tests {
 
         let file = File::open(temp_path)?;
         let reader = BufReader::new(file);
-        let contents: Tree = serde_json::from_reader(reader)?;
-        let expected: Tree = serde_json::from_value(json!({}))?;
+        let contents: CollectionTree = serde_json::from_reader(reader)?;
+        let expected: CollectionTree = serde_json::from_value(json!({}))?;
 
         assert_eq!(contents, expected);
 

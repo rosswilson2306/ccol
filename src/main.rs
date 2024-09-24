@@ -16,8 +16,8 @@ use ratatui::{
 use store::{AppState, CurrentScreen};
 use ui::ui;
 
-use crate::config::parse_config;
 use crate::error::Result;
+use crate::{config::parse_config, ui::traverse_config_tree};
 
 mod app;
 mod args;
@@ -29,10 +29,6 @@ mod ui;
 fn main() -> Result<()> {
     dotenv().ok();
     let _args = Args::parse();
-
-    let config_dir = get_config_dir()?;
-    let config_file = get_config_file(config_dir);
-    let _config = parse_config(config_file)?;
 
     enable_raw_mode()?;
     let mut stdout = io::stdout();
@@ -57,8 +53,14 @@ fn main() -> Result<()> {
 }
 
 fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut AppState) -> Result<()> {
+    let config_dir = get_config_dir()?;
+    let config_file = get_config_file(config_dir);
+    let config = parse_config(config_file)?;
+
+    let tree_items = traverse_config_tree(config, "".to_string())?;
+
     loop {
-        terminal.draw(|frame| ui(frame, app))?;
+        terminal.draw(|frame| ui(frame, app, &tree_items))?;
 
         if let Event::Key(key) = event::read()? {
             if key.kind == event::KeyEventKind::Release {
