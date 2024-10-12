@@ -89,7 +89,8 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut AppState) -> Result
                     }
                     KeyCode::Enter => {
                         app.tree_state.toggle_selected();
-                        if is_selected_item_a_leaf(&app.tree_state, &tree_items) {
+                        let selected_item = get_selected_item(&app.tree_state, &tree_items);
+                        if is_selected_item_a_leaf(selected_item) {
                             // Add logic to copy command to shell
                             break;
                         }
@@ -107,20 +108,22 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut AppState) -> Result
     Ok(())
 }
 
-pub fn is_selected_item_a_leaf(
+pub fn get_selected_item<'a>(
     tree_state: &TreeState<String>,
-    tree_items: &Vec<TreeItem<'_, String>>,
-) -> bool {
+    tree_items: &'a Vec<TreeItem<'a, String>>,
+) -> &'a TreeItem<'a, String> {
     let selected = tree_state.selected();
     let last = match selected.last() {
         Some(identifier) => identifier,
         None => "",
     };
     let flattened_items = tree_state.flatten(&tree_items);
-    let matched_item = flattened_items
+    flattened_items
         .iter()
         .find(|&flattened| flattened.item.identifier() == last)
-        .unwrap();
+        .unwrap().item // TODO
+}
 
-    matched_item.item.children().is_empty()
+pub fn is_selected_item_a_leaf(item: &TreeItem<'_, String>) -> bool {
+    item.children().is_empty()
 }
