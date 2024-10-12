@@ -61,7 +61,7 @@ pub fn traverse_config_tree<'a>(
         let new_path = format!("{}/{}", path, key);
 
         let tree_item = match subtree {
-            CollectionTree::Leaf(value) => TreeItem::new_leaf(new_path.clone(), value),
+            CollectionTree::Leaf(value) => TreeItem::new_leaf(new_path.clone(), format!("{}:  {}", key, value)),
             CollectionTree::Branch(subtree_map) => {
                 let children = traverse_config_tree(subtree_map, new_path.clone())?;
 

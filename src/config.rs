@@ -9,16 +9,22 @@ use directories::ProjectDirs;
 use serde::Deserialize;
 use serde_json::json;
 
-use crate::error::{CcolError, Result};
+use crate::{
+    error::{CcolError, Result},
+    store::AppState,
+};
 
-#[derive(Deserialize, Debug, PartialEq)]
+#[derive(Deserialize, Debug, PartialEq, Clone)]
 #[serde(untagged)]
 pub enum CollectionTree {
     Leaf(String),
     Branch(HashMap<String, CollectionTree>),
 }
 
-pub fn parse_config(config_path: PathBuf) -> Result<HashMap<String, CollectionTree>> {
+pub fn parse_config(
+    config_path: PathBuf,
+    app: &mut AppState,
+) -> Result<HashMap<String, CollectionTree>> {
     let file = match File::open(&config_path) {
         Ok(f) => f,
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
@@ -34,6 +40,7 @@ pub fn parse_config(config_path: PathBuf) -> Result<HashMap<String, CollectionTr
     let reader = BufReader::new(file);
 
     let contents: HashMap<String, CollectionTree> = serde_json::from_reader(reader)?;
+    app.config = Some(contents.clone());
 
     Ok(contents)
 }
@@ -57,6 +64,41 @@ pub fn get_config_dir() -> Result<PathBuf> {
 pub fn get_config_file(mut config_dir: PathBuf) -> PathBuf {
     config_dir.push("ccol.json");
     config_dir
+}
+
+pub fn find_command_in_json(identifier: String, app: &AppState) -> Result<&String> {
+    let path_components: Vec<&str> = identifier.trim_start_matches('/').split('/').collect();
+
+    let node = find_node(&path_components, &app.config.as_ref().unwrap())?; // TODO
+
+    dbg!(node);
+
+    match node {
+        CollectionTree::Branch(_) => Err(CcolError::MissingConfigDirectory), // TODO
+        CollectionTree::Leaf(command) => Ok(command),
+    }
+}
+
+pub fn find_node<'a>(
+    components: &[&str],
+    json: &'a HashMap<String, CollectionTree>,
+) -> Result<&'a CollectionTree> {
+    if components.is_empty() {
+        return Err(CcolError::CorruptedConfig); // TODO
+    }
+
+    let key = components[0];
+
+    let subtree = json.get(key).unwrap(); // TODO
+
+    if components.len() == 1 {
+        return Ok(subtree);
+    }
+
+    match subtree {
+        CollectionTree::Branch(subtree_map) => find_node(&components[1..], &subtree_map),
+        CollectionTree::Leaf(_) => Err(CcolError::CorruptedConfig), // TODO
+    }
 }
 
 #[cfg(test)]
