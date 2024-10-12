@@ -14,7 +14,7 @@ use ratatui::{
     Terminal,
 };
 use store::{AppState, CurrentScreen};
-use tui_tree_widget::TreeState;
+use tui_tree_widget::{TreeItem, TreeState};
 use ui::ui;
 
 use crate::error::Result;
@@ -64,8 +64,6 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut AppState) -> Result
     loop {
         terminal.draw(|frame| ui(frame, app, &tree_items))?;
 
-
-
         if let Event::Key(key) = event::read()? {
             if key.kind == event::KeyEventKind::Release {
                 // skip events that are not KeyEventKind::Press
@@ -83,8 +81,18 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut AppState) -> Result
                     KeyCode::Down | KeyCode::Char('j') => {
                         app.tree_state.key_down();
                     }
+                    KeyCode::Char('l') => {
+                        app.tree_state.key_right();
+                    }
+                    KeyCode::Char('h') => {
+                        app.tree_state.key_left();
+                    }
                     KeyCode::Enter => {
                         app.tree_state.toggle_selected();
+                        if is_selected_item_a_leaf(&app.tree_state, &tree_items) {
+                            // Add logic to copy command to shell
+                            break;
+                        }
                     }
                     KeyCode::Char('q') => break,
                     _ => {}
@@ -97,4 +105,22 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut AppState) -> Result
     }
 
     Ok(())
+}
+
+pub fn is_selected_item_a_leaf(
+    tree_state: &TreeState<String>,
+    tree_items: &Vec<TreeItem<'_, String>>,
+) -> bool {
+    let selected = tree_state.selected();
+    let last = match selected.last() {
+        Some(identifier) => identifier,
+        None => "",
+    };
+    let flattened_items = tree_state.flatten(&tree_items);
+    let matched_item = flattened_items
+        .iter()
+        .find(|&flattened| flattened.item.identifier() == last)
+        .unwrap();
+
+    matched_item.item.children().is_empty()
 }
