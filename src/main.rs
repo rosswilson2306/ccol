@@ -14,6 +14,7 @@ use ratatui::{
     Terminal,
 };
 use store::{AppState, CurrentScreen};
+use tui_tree_widget::TreeState;
 use ui::ui;
 
 use crate::error::Result;
@@ -37,7 +38,8 @@ fn main() -> Result<()> {
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
 
-    let mut app = AppState::new();
+    let tree_state = TreeState::<String>::default();
+    let mut app = AppState::new(tree_state);
     // RUN APP
     run_app(&mut terminal, &mut app)?;
 
@@ -57,10 +59,12 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut AppState) -> Result
     let config_file = get_config_file(config_dir);
     let config = parse_config(config_file)?;
 
-    let tree_items = traverse_config_tree(config, "".to_string())?;
+    let tree_items = traverse_config_tree(config, "root".to_string())?;
 
     loop {
         terminal.draw(|frame| ui(frame, app, &tree_items))?;
+
+
 
         if let Event::Key(key) = event::read()? {
             if key.kind == event::KeyEventKind::Release {
@@ -72,6 +76,15 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut AppState) -> Result
                 CurrentScreen::Main => match key.code {
                     KeyCode::Char('e') => {
                         app.current_screen = CurrentScreen::Editing;
+                    }
+                    KeyCode::Up | KeyCode::Char('k') => {
+                        app.tree_state.key_up();
+                    }
+                    KeyCode::Down | KeyCode::Char('j') => {
+                        app.tree_state.key_down();
+                    }
+                    KeyCode::Enter => {
+                        app.tree_state.toggle_selected();
                     }
                     KeyCode::Char('q') => break,
                     _ => {}

@@ -7,12 +7,16 @@ use ratatui::{
     widgets::{Block, Borders, Paragraph},
     Frame,
 };
-use tui_tree_widget::{Tree, TreeItem, TreeState};
+use tui_tree_widget::{Tree, TreeItem};
 
 use crate::error::Result;
 use crate::{config::CollectionTree, store::AppState};
 
-pub fn ui(frame: &mut Frame, _app: &AppState, items: &[TreeItem<String>]) {
+pub fn ui(
+    frame: &mut Frame,
+    app: &mut AppState,
+    items: &[TreeItem<String>],
+) {
     let chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
@@ -39,12 +43,12 @@ pub fn ui(frame: &mut Frame, _app: &AppState, items: &[TreeItem<String>]) {
         .borders(Borders::ALL)
         .style(Style::default().fg(Color::Gray));
 
-    let tree_menu = Tree::new(items).expect("all item identifiers are unique")
+    let tree_menu = Tree::new(items)
+        .expect("all item identifiers are unique")
+        .highlight_style(Style::default().fg(Color::Black).bg(Color::Gray))
         .block(menu_block);
 
-    frame.render_widget(tree_menu, chunks[1]);
-
-    let mut _tree_state = TreeState::<String>::default();
+    frame.render_stateful_widget(tree_menu, chunks[1], &mut app.tree_state);
 }
 
 pub fn traverse_config_tree<'a>(
