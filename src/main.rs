@@ -18,7 +18,7 @@ use store::{AppState, CurrentScreen};
 use tui_tree_widget::{TreeItem, TreeState};
 use ui::ui;
 
-use crate::{config::find_command_in_json, error::Result};
+use crate::{config::find_command_in_json, error::{CcolError, Result}};
 use crate::{config::parse_config, ui::traverse_config_tree};
 
 mod app;
@@ -55,7 +55,7 @@ fn main() -> Result<()> {
     let mut ctx = ClipboardContext::new().unwrap(); // TODO;
 
     if let Some(identifier) = output {
-        let command = find_command_in_json(identifier, &app)?;
+        let command = find_command_in_json(identifier, &app).ok_or(CcolError::ParseConfigError)?;
 
         ctx.set_contents(command.to_owned()).unwrap(); // TODO
         println!("Command copied to clipboard: {command}");

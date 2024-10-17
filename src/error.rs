@@ -2,31 +2,33 @@ use std::{fmt, io};
 
 #[derive(Debug)]
 pub enum CcolError {
-    CorruptedConfig,
+    CorruptedConfig(serde_json::Error),
     MissingConfigDirectory,
-    FileIO,
+    ParseConfigError,
+    FileIO(io::Error),
 }
 
 impl From<io::Error> for CcolError {
-    fn from(_error: io::Error) -> Self {
-        CcolError::FileIO
+    fn from(error: io::Error) -> Self {
+        CcolError::FileIO(error)
     }
 }
 
 impl From<serde_json::Error> for CcolError {
-    fn from(_error: serde_json::Error) -> Self {
-        CcolError::CorruptedConfig
+    fn from(error: serde_json::Error) -> Self {
+        CcolError::CorruptedConfig(error)
     }
 }
 
 impl fmt::Display for CcolError {
     fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            CcolError::CorruptedConfig => write!(formatter, "could not parse config file"),
+            CcolError::CorruptedConfig(_) => write!(formatter, "could not parse config file"),
+            CcolError::ParseConfigError => write!(formatter, "could not parse config file"),
             CcolError::MissingConfigDirectory => {
                 write!(formatter, "could not find config directory")
             }
-            CcolError::FileIO => write!(formatter, "error in file i/o"),
+            CcolError::FileIO(_) => write!(formatter, "error in file i/o"),
         }
     }
 }

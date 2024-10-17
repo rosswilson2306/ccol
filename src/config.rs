@@ -35,7 +35,7 @@ pub fn parse_config(
             new_config_file.sync_all()?;
             File::open(&config_path)?
         }
-        Err(_) => return Err(CcolError::FileIO),
+        Err(e) => return Err(CcolError::FileIO(e)),
     };
     let reader = BufReader::new(file);
 
@@ -55,7 +55,7 @@ pub fn get_config_dir() -> Result<PathBuf> {
     };
 
     if !directory.exists() {
-        fs::create_dir_all(&directory).map_err(|_| CcolError::FileIO)?;
+        fs::create_dir_all(&directory).map_err(CcolError::FileIO)?;
     }
 
     Ok(directory)
@@ -66,38 +66,36 @@ pub fn get_config_file(mut config_dir: PathBuf) -> PathBuf {
     config_dir
 }
 
-pub fn find_command_in_json(identifier: String, app: &AppState) -> Result<&String> {
+pub fn find_command_in_json(identifier: String, app: &AppState) -> Option<&String> {
     let path_components: Vec<&str> = identifier.trim_start_matches('/').split('/').collect();
 
-    let node = find_node(&path_components, &app.config.as_ref().unwrap())?; // TODO
-
-    dbg!(node);
+    let node = find_node(&path_components, &app.config.as_ref().unwrap())?;
 
     match node {
-        CollectionTree::Branch(_) => Err(CcolError::MissingConfigDirectory), // TODO
-        CollectionTree::Leaf(command) => Ok(command),
+        CollectionTree::Branch(_) => None,
+        CollectionTree::Leaf(command) => Some(command),
     }
 }
 
 pub fn find_node<'a>(
-    components: &[&str],
+    path_components: &[&str],
     json: &'a HashMap<String, CollectionTree>,
-) -> Result<&'a CollectionTree> {
-    if components.is_empty() {
-        return Err(CcolError::CorruptedConfig); // TODO
+) -> Option<&'a CollectionTree> {
+    if path_components.is_empty() {
+        return None;
     }
 
-    let key = components[0];
+    let key = path_components[0];
 
-    let subtree = json.get(key).unwrap(); // TODO
+    let subtree = json.get(key).unwrap();
 
-    if components.len() == 1 {
-        return Ok(subtree);
+    if path_components.len() == 1 {
+        return Some(subtree);
     }
 
     match subtree {
-        CollectionTree::Branch(subtree_map) => find_node(&components[1..], &subtree_map),
-        CollectionTree::Leaf(_) => Err(CcolError::CorruptedConfig), // TODO
+        CollectionTree::Branch(subtree_map) => find_node(&path_components[1..], &subtree_map),
+        CollectionTree::Leaf(_) => None,
     }
 }
 
