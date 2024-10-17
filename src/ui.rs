@@ -3,20 +3,16 @@ use std::collections::HashMap;
 use ratatui::{
     layout::{Constraint, Direction, Layout},
     style::{Color, Style},
-    text::Text,
+    text::{Line, Span, Text},
     widgets::{Block, Borders, Paragraph},
     Frame,
 };
 use tui_tree_widget::{Tree, TreeItem};
 
-use crate::error::Result;
 use crate::{config::CollectionTree, store::AppState};
+use crate::{error::Result, store::CurrentScreen};
 
-pub fn ui(
-    frame: &mut Frame,
-    app: &mut AppState,
-    items: &[TreeItem<String>],
-) {
+pub fn ui(frame: &mut Frame, app: &mut AppState, items: &[TreeItem<String>]) {
     let chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
@@ -49,6 +45,42 @@ pub fn ui(
         .block(menu_block);
 
     frame.render_stateful_widget(tree_menu, chunks[1], &mut app.tree_state);
+
+    let current_mode_text = vec![match app.current_screen {
+        CurrentScreen::Main => Span::styled("Normal Mode", Style::default().fg(Color::Green)),
+        CurrentScreen::Editing => Span::styled("Editing Mode", Style::default().fg(Color::Yellow)),
+    }
+    .to_owned()];
+
+    let mode_footer =
+        Paragraph::new(Line::from(current_mode_text)).block(Block::default().borders(Borders::ALL));
+
+    let keys_hint = {
+        match app.current_screen {
+            CurrentScreen::Main => vec![
+                Span::styled(
+                    "(q) quit",
+                    Style::default().fg(Color::Blue),
+                ),
+                Span::styled(" | ", Style::default().fg(Color::Red)),
+                Span::styled("(e) edit node", Style::default().fg(Color::Blue)),
+                Span::styled(" | ", Style::default().fg(Color::Red)),
+                Span::styled("(Enter) toggle / open", Style::default().fg(Color::Blue)),
+            ],
+            CurrentScreen::Editing => vec![Span::styled("(q) quit", Style::default().fg(Color::Green))],
+        }
+    };
+
+    let footer_chunks = Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([Constraint::Percentage(20), Constraint::Percentage(80)])
+        .split(chunks[2]);
+
+    let keys_hint_block =
+        Paragraph::new(Line::from(keys_hint)).block(Block::default().borders(Borders::ALL));
+
+    frame.render_widget(mode_footer, footer_chunks[0]);
+    frame.render_widget(keys_hint_block, footer_chunks[1]);
 }
 
 pub fn traverse_config_tree<'a>(
@@ -61,7 +93,9 @@ pub fn traverse_config_tree<'a>(
         let new_path = format!("{}/{}", path, key);
 
         let tree_item = match subtree {
-            CollectionTree::Leaf(value) => TreeItem::new_leaf(new_path.clone(), format!("{}:  {}", key, value)),
+            CollectionTree::Leaf(value) => {
+                TreeItem::new_leaf(new_path.clone(), format!("{}:  {}", key, value))
+            }
             CollectionTree::Branch(subtree_map) => {
                 let children = traverse_config_tree(subtree_map, new_path.clone())?;
 
