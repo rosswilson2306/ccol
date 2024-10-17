@@ -130,14 +130,14 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut AppState) -> Result
 
 pub fn get_selected_item<'a>(
     tree_state: &TreeState<String>,
-    tree_items: &'a Vec<TreeItem<'a, String>>,
+    tree_items: &'a [TreeItem<'a, String>],
 ) -> &'a TreeItem<'a, String> {
     let selected = tree_state.selected();
     let last = match selected.last() {
         Some(identifier) => identifier,
         None => "",
     };
-    let flattened_items = tree_state.flatten(&tree_items);
+    let flattened_items = tree_state.flatten(tree_items);
     flattened_items
         .iter()
         .find(|&flattened| flattened.item.identifier() == last)

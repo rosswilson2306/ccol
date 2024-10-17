@@ -69,7 +69,7 @@ pub fn get_config_file(mut config_dir: PathBuf) -> PathBuf {
 pub fn find_command_in_json(identifier: String, app: &AppState) -> Option<(String, String)> {
     let path_components: Vec<&str> = identifier.trim_start_matches('/').split('/').collect();
 
-    let (key, node) = find_node(&path_components, &app.config.as_ref().unwrap())?;
+    let (key, node) = find_node(&path_components, app.config.as_ref().unwrap())?;
 
     match node {
         CollectionTree::Branch(_) => None,
@@ -94,7 +94,7 @@ pub fn find_node<'a>(
     }
 
     match subtree {
-        CollectionTree::Branch(subtree_map) => find_node(&path_components[1..], &subtree_map),
+        CollectionTree::Branch(subtree_map) => find_node(&path_components[1..], subtree_map),
         CollectionTree::Leaf(_) => None,
     }
 }
