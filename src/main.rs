@@ -2,6 +2,7 @@ use std::io;
 
 use args::Args;
 use clap::Parser;
+use colored::Colorize;
 use config::{get_config_dir, get_config_file};
 use copypasta::{ClipboardContext, ClipboardProvider};
 use dotenv::dotenv;
@@ -18,7 +19,10 @@ use store::{AppState, CurrentScreen};
 use tui_tree_widget::{TreeItem, TreeState};
 use ui::ui;
 
-use crate::{config::find_command_in_json, error::{CcolError, Result}};
+use crate::{
+    config::find_command_in_json,
+    error::{CcolError, Result},
+};
 use crate::{config::parse_config, ui::traverse_config_tree};
 
 mod app;
@@ -55,10 +59,16 @@ fn main() -> Result<()> {
     let mut ctx = ClipboardContext::new().unwrap(); // TODO;
 
     if let Some(identifier) = output {
-        let command = find_command_in_json(identifier, &app).ok_or(CcolError::ParseConfigError)?;
+        let (key, command) =
+            find_command_in_json(identifier, &app).ok_or(CcolError::ParseConfigError)?;
 
         ctx.set_contents(command.to_owned()).unwrap(); // TODO
-        println!("Command copied to clipboard: {command}");
+        println!(
+            "{} {} {}",
+            "Command copied to clipboard:".bold().blue(),
+            key.bold().magenta(),
+            command.green()
+        );
     }
 
     Ok(())

@@ -66,21 +66,21 @@ pub fn get_config_file(mut config_dir: PathBuf) -> PathBuf {
     config_dir
 }
 
-pub fn find_command_in_json(identifier: String, app: &AppState) -> Option<&String> {
+pub fn find_command_in_json(identifier: String, app: &AppState) -> Option<(String, String)> {
     let path_components: Vec<&str> = identifier.trim_start_matches('/').split('/').collect();
 
-    let node = find_node(&path_components, &app.config.as_ref().unwrap())?;
+    let (key, node) = find_node(&path_components, &app.config.as_ref().unwrap())?;
 
     match node {
         CollectionTree::Branch(_) => None,
-        CollectionTree::Leaf(command) => Some(command),
+        CollectionTree::Leaf(command) => Some((key.to_string(), command.to_string())),
     }
 }
 
 pub fn find_node<'a>(
-    path_components: &[&str],
+    path_components: &[&'a str],
     json: &'a HashMap<String, CollectionTree>,
-) -> Option<&'a CollectionTree> {
+) -> Option<(&'a str, &'a CollectionTree)> {
     if path_components.is_empty() {
         return None;
     }
@@ -90,7 +90,7 @@ pub fn find_node<'a>(
     let subtree = json.get(key).unwrap();
 
     if path_components.len() == 1 {
-        return Some(subtree);
+        return Some((key, subtree));
     }
 
     match subtree {
