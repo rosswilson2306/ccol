@@ -3,7 +3,7 @@ use std::io;
 use args::Args;
 use clap::Parser;
 use colored::Colorize;
-use config::{get_config_dir, get_config_file};
+use config::{get_config_dir, get_config_file, parse_config};
 use copypasta::{ClipboardContext, ClipboardProvider};
 use dotenv::dotenv;
 use ratatui::{
@@ -15,15 +15,15 @@ use ratatui::{
     },
     Terminal,
 };
+use serde_json::Value;
 use store::{AppState, CurrentScreen};
 use tui_tree_widget::{TreeItem, TreeState};
-use ui::ui;
+use ui::{tree_items, ui};
 
 use crate::{
     config::find_command_in_json,
     error::{CcolError, Result},
 };
-use crate::{config::parse_config, ui::traverse_config_tree};
 
 mod app;
 mod args;
@@ -77,9 +77,13 @@ fn main() -> Result<()> {
 fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut AppState) -> Result<Option<String>> {
     let config_dir = get_config_dir()?;
     let config_file = get_config_file(config_dir);
-    let config = parse_config(config_file, app)?;
+    let config = parse_config(config_file)?;
+    let tree_items = tree_items(&config)?;
 
-    let tree_items = traverse_config_tree(config, "".to_string())?;
+    match config.clone() {
+        Value::Object(o) => app.config = Some(o),
+        _ => return Err(CcolError::ParseConfigError),
+    }
 
     loop {
         terminal.draw(|frame| ui(frame, app, &tree_items))?;

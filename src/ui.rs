@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use ratatui::{
     layout::{Constraint, Direction, Layout},
     style::{Color, Style},
@@ -7,9 +5,10 @@ use ratatui::{
     widgets::{Block, Borders, Paragraph},
     Frame,
 };
+use serde_json::{Map, Value};
 use tui_tree_widget::{Tree, TreeItem};
 
-use crate::{config::CollectionTree, store::AppState};
+use crate::{error::CcolError, store::AppState};
 use crate::{error::Result, store::CurrentScreen};
 
 pub fn ui(frame: &mut Frame, app: &mut AppState, items: &[TreeItem<String>]) {
@@ -58,16 +57,15 @@ pub fn ui(frame: &mut Frame, app: &mut AppState, items: &[TreeItem<String>]) {
     let keys_hint = {
         match app.current_screen {
             CurrentScreen::Main => vec![
-                Span::styled(
-                    "(q) quit",
-                    Style::default().fg(Color::Blue),
-                ),
+                Span::styled("(q) quit", Style::default().fg(Color::Blue)),
                 Span::styled(" | ", Style::default().fg(Color::Red)),
                 Span::styled("(e) edit node", Style::default().fg(Color::Blue)),
                 Span::styled(" | ", Style::default().fg(Color::Red)),
                 Span::styled("(Enter) toggle / open", Style::default().fg(Color::Blue)),
             ],
-            CurrentScreen::Editing => vec![Span::styled("(q) quit", Style::default().fg(Color::Green))],
+            CurrentScreen::Editing => {
+                vec![Span::styled("(q) quit", Style::default().fg(Color::Green))]
+            }
         }
     };
 
@@ -83,26 +81,33 @@ pub fn ui(frame: &mut Frame, app: &mut AppState, items: &[TreeItem<String>]) {
     frame.render_widget(keys_hint_block, footer_chunks[1]);
 }
 
-pub fn traverse_config_tree<'a>(
-    config: HashMap<String, CollectionTree>,
+pub fn tree_items(root: &Value) -> Result<Vec<TreeItem<'_, String>>> {
+    match root {
+        Value::Object(object) => traverse_json_tree(object, "".to_string()),
+        _ => Err(CcolError::ParseConfigError),
+    }
+}
+
+pub fn traverse_json_tree(
+    map: &Map<String, Value>,
     path: String,
-) -> Result<Vec<TreeItem<'a, String>>> {
+) -> Result<Vec<TreeItem<'_, String>>> {
     let mut items = Vec::new();
 
-    for (key, subtree) in config {
+    for (key, subtree) in map {
         let new_path = format!("{}/{}", path, key);
 
         let tree_item = match subtree {
-            CollectionTree::Leaf(value) => {
-                TreeItem::new_leaf(new_path.clone(), format!("{}:  {}", key, value))
+            Value::String(command) => {
+                TreeItem::new_leaf(new_path.clone(), format!("{}: {}", key, command))
             }
-            CollectionTree::Branch(subtree_map) => {
-                let children = traverse_config_tree(subtree_map, new_path.clone())?;
+            Value::Object(o) => {
+                let children = traverse_json_tree(o, new_path.clone())?;
 
-                TreeItem::new(new_path.clone(), key, children)?
+                TreeItem::new(key.clone(), key.clone(), children)?
             }
+            _ => return Err(CcolError::ParseConfigError),
         };
-
         items.push(tree_item);
     }
 

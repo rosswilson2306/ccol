@@ -1,14 +1,11 @@
-use std::collections::HashMap;
-
+use serde_json::{Map, Value};
 use tui_tree_widget::TreeState;
-
-use crate::config::CollectionTree;
 
 #[derive(Debug)]
 pub struct AppState {
     pub current_screen: CurrentScreen,
     pub tree_state: TreeState<String>,
-    pub config: Option<HashMap<String, CollectionTree>>,
+    pub config: Option<Map<String, Value>>,
 }
 
 impl AppState {

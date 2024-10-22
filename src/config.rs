@@ -1,30 +1,18 @@
 use std::{
-    collections::HashMap,
     fs::{self, File},
     io::{BufReader, Write},
     path::PathBuf,
 };
 
 use directories::ProjectDirs;
-use serde::Deserialize;
-use serde_json::json;
+use serde_json::{json, Map, Value};
 
 use crate::{
     error::{CcolError, Result},
     store::AppState,
 };
 
-#[derive(Deserialize, Debug, PartialEq, Clone)]
-#[serde(untagged)]
-pub enum CollectionTree {
-    Leaf(String),
-    Branch(HashMap<String, CollectionTree>),
-}
-
-pub fn parse_config(
-    config_path: PathBuf,
-    app: &mut AppState,
-) -> Result<HashMap<String, CollectionTree>> {
+pub fn parse_config(config_path: PathBuf) -> Result<Value> {
     let file = match File::open(&config_path) {
         Ok(f) => f,
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
@@ -39,8 +27,7 @@ pub fn parse_config(
     };
     let reader = BufReader::new(file);
 
-    let contents: HashMap<String, CollectionTree> = serde_json::from_reader(reader)?;
-    app.config = Some(contents.clone());
+    let contents: Value = serde_json::from_reader(reader)?;
 
     Ok(contents)
 }
@@ -72,15 +59,15 @@ pub fn find_command_in_json(identifier: String, app: &AppState) -> Option<(Strin
     let (key, node) = find_node(&path_components, app.config.as_ref().unwrap())?;
 
     match node {
-        CollectionTree::Branch(_) => None,
-        CollectionTree::Leaf(command) => Some((key.to_string(), command.to_string())),
+        Value::String(command) => Some((key.to_string(), command.to_string())),
+        _ => None,
     }
 }
 
 pub fn find_node<'a>(
     path_components: &[&'a str],
-    json: &'a HashMap<String, CollectionTree>,
-) -> Option<(&'a str, &'a CollectionTree)> {
+    json: &'a Map<String, Value>,
+) -> Option<(&'a str, &'a Value)> {
     if path_components.is_empty() {
         return None;
     }
@@ -94,8 +81,8 @@ pub fn find_node<'a>(
     }
 
     match subtree {
-        CollectionTree::Branch(subtree_map) => find_node(&path_components[1..], subtree_map),
-        CollectionTree::Leaf(_) => None,
+        Value::Object(subtree_map) => find_node(&path_components[1..], subtree_map),
+        _ => None,
     }
 }
 
