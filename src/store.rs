@@ -9,10 +9,10 @@ pub struct AppState {
 }
 
 impl AppState {
-    pub fn new(tree_state: TreeState<String>) -> AppState {
+    pub fn new() -> AppState {
         AppState {
             current_screen: CurrentScreen::Main,
-            tree_state,
+            tree_state: TreeState::<String>::default(),
             config: None,
         }
     }

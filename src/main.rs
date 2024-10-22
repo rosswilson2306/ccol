@@ -43,8 +43,7 @@ fn main() -> Result<()> {
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
 
-    let tree_state = TreeState::<String>::default(); // TODO: refactor
-    let mut app = AppState::new(tree_state);
+    let mut app = AppState::new();
 
     let output = run_app(&mut terminal, &mut app)?;
 
