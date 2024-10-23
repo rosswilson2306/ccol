@@ -1,6 +1,6 @@
 use ratatui::{
-    layout::{Constraint, Direction, Layout},
-    style::{Color, Style},
+    layout::{Constraint, Direction, Layout, Rect},
+    style::{Color, Style, Stylize},
     text::{Line, Span, Text},
     widgets::{Block, Borders, Paragraph},
     Frame,
@@ -11,7 +11,9 @@ use tui_tree_widget::{Tree, TreeItem};
 use crate::{error::CcolError, store::AppState};
 use crate::{error::Result, store::CurrentScreen};
 
-pub fn ui(frame: &mut Frame, app: &mut AppState, items: &[TreeItem<String>]) {
+use super::popup::Popup;
+
+pub fn draw(frame: &mut Frame, app: &mut AppState, items: &[TreeItem<String>]) {
     let chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
@@ -64,7 +66,11 @@ pub fn ui(frame: &mut Frame, app: &mut AppState, items: &[TreeItem<String>]) {
                 Span::styled("(Enter) toggle / open", Style::default().fg(Color::Blue)),
             ],
             CurrentScreen::Editing => {
-                vec![Span::styled("(q) quit", Style::default().fg(Color::Green))]
+                vec![
+                    Span::styled("(Esc) normal", Style::default().fg(Color::Blue)),
+                    Span::styled(" | ", Style::default().fg(Color::Red)),
+                    Span::styled("(Enter) save change", Style::default().fg(Color::Blue)),
+                ]
             }
         }
     };
@@ -79,6 +85,25 @@ pub fn ui(frame: &mut Frame, app: &mut AppState, items: &[TreeItem<String>]) {
 
     frame.render_widget(mode_footer, footer_chunks[0]);
     frame.render_widget(keys_hint_block, footer_chunks[1]);
+
+    if let CurrentScreen::Editing = app.current_screen {
+        let area = frame.area();
+        let popup_area = Rect {
+            x: area.width / 4,
+            y: area.height / 3,
+            width: area.width / 2,
+            height: area.height / 3,
+        };
+
+        let popup = Popup::default()
+            .content("Edit command")
+            .style(Style::new().yellow())
+            .title("Edit command")
+            .title_style(Style::new().white().bold())
+            .border_style(Style::new().red());
+
+        frame.render_widget(popup, popup_area);
+    }
 }
 
 pub fn tree_items(root: &Value) -> Result<Vec<TreeItem<'_, String>>> {

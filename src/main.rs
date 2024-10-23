@@ -18,7 +18,7 @@ use ratatui::{
 use serde_json::Value;
 use store::{AppState, CurrentScreen};
 use tui_tree_widget::{TreeItem, TreeState};
-use ui::{tree_items, ui};
+use ui::draw::{draw, tree_items};
 
 use crate::{
     config::find_command_in_json,
@@ -85,7 +85,7 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut AppState) -> Result
     }
 
     loop {
-        terminal.draw(|frame| ui(frame, app, &tree_items))?;
+        terminal.draw(|frame| draw(frame, app, &tree_items))?;
 
         if let Event::Key(key) = event::read()? {
             if key.kind == event::KeyEventKind::Release {
@@ -122,6 +122,9 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut AppState) -> Result
                     _ => {}
                 },
                 CurrentScreen::Editing => match key.code {
+                    KeyCode::Esc => {
+                        app.current_screen = CurrentScreen::Main;
+                    }
                     _ => {}
                 },
             }

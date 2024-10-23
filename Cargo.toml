@@ -8,6 +8,7 @@ authors = ["Ross Wilson"]
 clap = { version = "4.5.17", features = ["derive"] }
 colored = "2.1.0"
 copypasta = "0.10.1"
+derive_setters = "0.1.6"
 directories = "5.0.1"
 dotenv = "0.15.0"
 ratatui = "0.28.1"
