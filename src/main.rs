@@ -3,7 +3,6 @@ use std::io;
 use args::Args;
 use clap::Parser;
 use colored::Colorize;
-use config::{get_config_dir, get_config_file, parse_config};
 use copypasta::{ClipboardContext, ClipboardProvider};
 use dotenv::dotenv;
 use ratatui::{
@@ -15,11 +14,10 @@ use ratatui::{
     },
     Terminal,
 };
-use serde_json::Value;
 use store::{AppState, CurrentScreen};
 use ui::{
     draw::draw,
-    json::{get_selected_item, is_selected_item_a_leaf, tree_items},
+    json::{get_selected_item, is_selected_item_a_leaf},
 };
 
 use crate::{
@@ -45,7 +43,7 @@ fn main() -> Result<()> {
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
 
-    let mut app = AppState::new();
+    let mut app = AppState::new()?;
 
     let output = run_app(&mut terminal, &mut app)?;
 
@@ -76,18 +74,8 @@ fn main() -> Result<()> {
 }
 
 fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut AppState) -> Result<Option<String>> {
-    let config_dir = get_config_dir()?;
-    let config_file = get_config_file(config_dir);
-    let config = parse_config(config_file)?;
-    let tree_items = tree_items(&config)?;
-
-    match config.clone() {
-        Value::Object(o) => app.config = Some(o),
-        _ => return Err(CcolError::ParseConfigError),
-    }
-
     loop {
-        terminal.draw(|frame| draw(frame, app, &tree_items))?;
+        terminal.draw(|frame| draw(frame, app))?;
 
         if let Event::Key(key) = event::read()? {
             if key.kind == event::KeyEventKind::Release {
@@ -98,7 +86,8 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut AppState) -> Result
             match app.current_screen {
                 CurrentScreen::Main => match key.code {
                     KeyCode::Char('e') => {
-                        if let Some(selected_item) = get_selected_item(&app.tree_state, &tree_items)
+                        if let Some(selected_item) =
+                            get_selected_item(&app.tree_state, &app.tree_items)
                         {
                             if is_selected_item_a_leaf(selected_item) {
                                 let _json_result =
@@ -122,7 +111,8 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut AppState) -> Result
                     }
                     KeyCode::Enter => {
                         app.tree_state.toggle_selected();
-                        if let Some(selected_item) = get_selected_item(&app.tree_state, &tree_items)
+                        if let Some(selected_item) =
+                            get_selected_item(&app.tree_state, &app.tree_items)
                         {
                             if is_selected_item_a_leaf(selected_item) {
                                 // TODO Add logic to copy command to shell

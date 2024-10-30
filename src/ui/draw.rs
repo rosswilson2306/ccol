@@ -5,13 +5,13 @@ use ratatui::{
     widgets::{Block, Borders, Paragraph},
     Frame,
 };
-use tui_tree_widget::{Tree, TreeItem};
+use tui_tree_widget::Tree;
 
 use crate::store::{AppState, CurrentScreen};
 
 use super::popup::Popup;
 
-pub fn draw(frame: &mut Frame, app: &mut AppState, items: &[TreeItem<String>]) {
+pub fn draw(frame: &mut Frame, app: &mut AppState) {
     let chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
@@ -38,7 +38,7 @@ pub fn draw(frame: &mut Frame, app: &mut AppState, items: &[TreeItem<String>]) {
         .borders(Borders::ALL)
         .style(Style::default().fg(Color::Gray));
 
-    let tree_menu = Tree::new(items)
+    let tree_menu = Tree::new(&app.tree_items)
         .expect("all item identifiers are unique")
         .highlight_style(Style::default().fg(Color::Black).bg(Color::Gray))
         .block(menu_block);

@@ -3,7 +3,7 @@ use tui_tree_widget::{TreeItem, TreeState};
 
 use crate::error::{CcolError, Result};
 
-pub fn tree_items(root: &Value) -> Result<Vec<TreeItem<'_, String>>> {
+pub fn tree_items(root: Value) -> Result<Vec<TreeItem<'static, String>>> {
     match root {
         Value::Object(object) => traverse_json_tree(object, "".to_string()),
         _ => Err(CcolError::ParseConfigError),
@@ -11,9 +11,9 @@ pub fn tree_items(root: &Value) -> Result<Vec<TreeItem<'_, String>>> {
 }
 
 pub fn traverse_json_tree(
-    map: &Map<String, Value>,
+    map: Map<String, Value>,
     path: String,
-) -> Result<Vec<TreeItem<'_, String>>> {
+) -> Result<Vec<TreeItem<'static, String>>> {
     let mut items = Vec::new();
 
     for (key, subtree) in map {
