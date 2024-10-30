@@ -6,6 +6,7 @@ pub struct AppState {
     pub current_screen: CurrentScreen,
     pub tree_state: TreeState<String>,
     pub config: Option<Map<String, Value>>,
+    pub current_json_node: Option<Value>,
 }
 
 impl AppState {
@@ -14,6 +15,7 @@ impl AppState {
             current_screen: CurrentScreen::Main,
             tree_state: TreeState::<String>::default(),
             config: None,
+            current_json_node: None,
         }
     }
 }

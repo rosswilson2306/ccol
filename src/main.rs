@@ -17,8 +17,10 @@ use ratatui::{
 };
 use serde_json::Value;
 use store::{AppState, CurrentScreen};
-use tui_tree_widget::{TreeItem, TreeState};
-use ui::draw::{draw, tree_items};
+use ui::{
+    draw::draw,
+    json::{get_selected_item, is_selected_item_a_leaf, tree_items},
+};
 
 use crate::{
     config::find_command_in_json,
@@ -96,6 +98,14 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut AppState) -> Result
             match app.current_screen {
                 CurrentScreen::Main => match key.code {
                     KeyCode::Char('e') => {
+                        if let Some(selected_item) = get_selected_item(&app.tree_state, &tree_items)
+                        {
+                            if is_selected_item_a_leaf(selected_item) {
+                                let _json_result =
+                                    find_command_in_json(selected_item.identifier().clone(), app);
+                            }
+                        }
+
                         app.current_screen = CurrentScreen::Editing;
                     }
                     KeyCode::Up | KeyCode::Char('k') => {
@@ -112,10 +122,12 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut AppState) -> Result
                     }
                     KeyCode::Enter => {
                         app.tree_state.toggle_selected();
-                        let selected_item = get_selected_item(&app.tree_state, &tree_items);
-                        if is_selected_item_a_leaf(selected_item) {
-                            // Add logic to copy command to shell
-                            return Ok(Some(selected_item.identifier().clone()));
+                        if let Some(selected_item) = get_selected_item(&app.tree_state, &tree_items)
+                        {
+                            if is_selected_item_a_leaf(selected_item) {
+                                // TODO Add logic to copy command to shell
+                                return Ok(Some(selected_item.identifier().clone()));
+                            }
                         }
                     }
                     KeyCode::Char('q') => break,
@@ -132,25 +144,4 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut AppState) -> Result
     }
 
     Ok(None)
-}
-
-pub fn get_selected_item<'a>(
-    tree_state: &TreeState<String>,
-    tree_items: &'a [TreeItem<'a, String>],
-) -> &'a TreeItem<'a, String> {
-    let selected = tree_state.selected();
-    let last = match selected.last() {
-        Some(identifier) => identifier,
-        None => "",
-    };
-    let flattened_items = tree_state.flatten(tree_items);
-    flattened_items
-        .iter()
-        .find(|&flattened| flattened.item.identifier() == last)
-        .unwrap()
-        .item // TODO
-}
-
-pub fn is_selected_item_a_leaf(item: &TreeItem<'_, String>) -> bool {
-    item.children().is_empty()
 }

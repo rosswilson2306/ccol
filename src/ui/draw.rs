@@ -5,11 +5,9 @@ use ratatui::{
     widgets::{Block, Borders, Paragraph},
     Frame,
 };
-use serde_json::{Map, Value};
 use tui_tree_widget::{Tree, TreeItem};
 
-use crate::{error::CcolError, store::AppState};
-use crate::{error::Result, store::CurrentScreen};
+use crate::store::{AppState, CurrentScreen};
 
 use super::popup::Popup;
 
@@ -104,37 +102,4 @@ pub fn draw(frame: &mut Frame, app: &mut AppState, items: &[TreeItem<String>]) {
 
         frame.render_widget(popup, popup_area);
     }
-}
-
-pub fn tree_items(root: &Value) -> Result<Vec<TreeItem<'_, String>>> {
-    match root {
-        Value::Object(object) => traverse_json_tree(object, "".to_string()),
-        _ => Err(CcolError::ParseConfigError),
-    }
-}
-
-pub fn traverse_json_tree(
-    map: &Map<String, Value>,
-    path: String,
-) -> Result<Vec<TreeItem<'_, String>>> {
-    let mut items = Vec::new();
-
-    for (key, subtree) in map {
-        let new_path = format!("{}/{}", path, key);
-
-        let tree_item = match subtree {
-            Value::String(command) => {
-                TreeItem::new_leaf(new_path.clone(), format!("{}: {}", key, command))
-            }
-            Value::Object(o) => {
-                let children = traverse_json_tree(o, new_path.clone())?;
-
-                TreeItem::new(key.clone(), key.clone(), children)?
-            }
-            _ => return Err(CcolError::ParseConfigError),
-        };
-        items.push(tree_item);
-    }
-
-    Ok(items)
 }
