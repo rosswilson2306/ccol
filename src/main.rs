@@ -63,7 +63,7 @@ fn main() -> Result<()> {
 
         ctx.set_contents(command.to_owned()).unwrap(); // TODO
         println!(
-            "{} {} {}",
+            "\n\n{}\n\n{}\n\n{}\n\n",
             "Command copied to clipboard:".bold().blue(),
             key.bold().magenta(),
             command.green()
