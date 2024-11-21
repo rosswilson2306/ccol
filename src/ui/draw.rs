@@ -57,7 +57,7 @@ pub fn draw(frame: &mut Frame, app: &mut AppState) {
     let keys_hint = {
         match app.current_screen {
             CurrentScreen::Main => vec![
-                Span::styled("(q) quit", Style::default().fg(Color::Blue)),
+                Span::styled("(q / esc) quit", Style::default().fg(Color::Blue)),
                 Span::styled(" | ", Style::default().fg(Color::Red)),
                 Span::styled("(e) edit node", Style::default().fg(Color::Blue)),
                 Span::styled(" | ", Style::default().fg(Color::Red)),

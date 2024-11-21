@@ -120,7 +120,7 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut AppState) -> Result
                             }
                         }
                     }
-                    KeyCode::Char('q') => break,
+                    KeyCode::Esc | KeyCode::Char('q') => break,
                     _ => {}
                 },
                 CurrentScreen::Editing => match key.code {
