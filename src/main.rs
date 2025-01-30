@@ -61,10 +61,14 @@ fn main() -> Result<()> {
         let (key, command) =
             find_command_in_json(identifier, &app).ok_or(CcolError::ParseConfigError)?;
 
-        ctx.set_contents(command.to_owned()).unwrap(); // TODO
+        let message = match ctx.set_contents(command.to_owned()) {
+            Ok(_) => "Command copied to clipboard:",
+            Err(_) => "Unable to copy command to clipboard:",
+        };
+
         println!(
             "\n\n{}\n\n{}\n\n{}\n\n",
-            "Command copied to clipboard:".bold().blue(),
+            message.bold().blue(),
             key.bold().magenta(),
             command.green()
         );
