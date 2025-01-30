@@ -55,16 +55,16 @@ fn main() -> Result<()> {
     )?;
     terminal.show_cursor()?;
 
-    let mut ctx = ClipboardContext::new().unwrap(); // TODO;
+    let ctx = ClipboardContext::new();
 
     if let Some(identifier) = output {
         let (key, command) =
             find_command_in_json(identifier, &app).ok_or(CcolError::ParseConfigError)?;
 
-        let message = match ctx.set_contents(command.to_owned()) {
-            Ok(_) => "Command copied to clipboard:",
-            Err(_) => "Unable to copy command to clipboard:",
-        };
+        let message = ctx
+            .and_then(|mut clipboard| clipboard.set_contents(command.to_owned()))
+            .map(|_| "Command copied to clipboard:")
+            .unwrap_or_else(|_| "Unable to copy command to clipboard:");
 
         println!(
             "\n\n{}\n\n{}\n\n{}\n\n",
