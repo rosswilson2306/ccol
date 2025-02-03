@@ -1,5 +1,6 @@
 use std::io;
 
+use anyhow::{Context, Result};
 use args::Args;
 use clap::Parser;
 use colored::Colorize;
@@ -20,10 +21,7 @@ use ui::{
     json::{get_selected_item, is_selected_item_a_leaf},
 };
 
-use crate::{
-    config::find_command_in_json,
-    error::{CcolError, Result},
-};
+use crate::config::find_command_in_json;
 
 mod app;
 mod args;
@@ -58,8 +56,8 @@ fn main() -> Result<()> {
     let ctx = ClipboardContext::new();
 
     if let Some(identifier) = output {
-        let (key, command) =
-            find_command_in_json(identifier, &app).ok_or(CcolError::ParseConfigError)?;
+        let (key, command) = find_command_in_json(identifier, &app)
+            .context("Unablde to find command from identifier")?;
 
         let message = ctx
             .and_then(|mut clipboard| clipboard.set_contents(command.to_owned()))
