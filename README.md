@@ -2,22 +2,28 @@
 
 ## Description
 
-Tui application for easily accessing a personal store of commands for different CLI tools.
+`ccol` is a TUI application desgined for easy access to a personal store of CLI comands across various tools.
 
-`ccol` aims to provide a simple interface for CLI commands that can either be tedius to type out or difficult to remember.
+It provides a simple interface for managing commands that are either tedious to type or difficult to remember. 
+Initially inspired by the need for a better way to store `curl` commands piped to `jq` - as opposed to keeping them
+in a `yaml` file - `ccol` evolved into a general-purpose solution for storing an retrieving complex CLI commands.
 
-Born from a desire to provide a better way of storing `curl` commands piped to `jq` than storing them in a `yaml` file, which
-became a way of storing other commands that can be long to type out or have flags or syntax that can be difficult to remember.
-`ccol` reads from a config file meaning the user does not have to manually `cd` to a directory / file on their system to copy 
-commands they have stored.
+By reading from a configuration file, `ccol` eliminates the need to manually navigate directories or open files to 
+copy stored commands, making execution more seamless and efficient.
 
 ## Getting Started
 
-Clone this repository, build with:
+### Prerequesites
+
+- [rustup](https://doc.rust-lang.org/cargo/getting-started/installation.html)
+
+### Build from source
+
+Clone this repository then build with:
 ```bash
 cargo build --release
 ```
-move the generated binary somewhere within you `$PATH`, eg:
+Move or copy the generated binary to a location available within you `$PATH`, eg:
 ```bash
 mv ./target/release/ccol /local/bin
 ```
