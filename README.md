@@ -49,6 +49,11 @@ Example `ccol.json`
     "system": {
         "search-system-fonts": "fc-list | fzf",
         "set-shell": "chsh -s $(which zsh)",
+    },
+    "curl": {
+        "my-api": {
+            "find": "curl 'https://mp-long-url.com?page=1&page_size=12&sort=price-asc"
+        }
     }
 }
 ```
