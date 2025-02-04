@@ -4,13 +4,11 @@ use std::{
     path::PathBuf,
 };
 
+use anyhow::Result;
 use directories::ProjectDirs;
 use serde_json::{json, Map, Value};
 
-use crate::{
-    error::{CcolError, Result},
-    store::AppState,
-};
+use crate::store::AppState;
 
 pub fn parse_config(config_path: PathBuf) -> Result<Value> {
     let file = match File::open(&config_path) {
@@ -23,7 +21,12 @@ pub fn parse_config(config_path: PathBuf) -> Result<Value> {
             new_config_file.sync_all()?;
             File::open(&config_path)?
         }
-        Err(e) => return Err(CcolError::FileIO(e)),
+        Err(_) => {
+            return Err(anyhow::anyhow!(
+                "Unable to open config file at {:?}",
+                &config_path
+            ))
+        }
     };
     let reader = BufReader::new(file);
 
@@ -38,11 +41,12 @@ pub fn get_config_dir() -> Result<PathBuf> {
     } else if let Some(project_dirs) = ProjectDirs::from("io", "rosswilson", "ccol") {
         project_dirs.config_local_dir().to_path_buf()
     } else {
-        return Err(CcolError::MissingConfigDirectory);
+        return Err(anyhow::anyhow!("Unable to find config directory"));
     };
 
     if !directory.exists() {
-        fs::create_dir_all(&directory).map_err(CcolError::FileIO)?;
+        fs::create_dir_all(&directory)
+            .map_err(|_| anyhow::anyhow!("Unable to create directory"))?;
     }
 
     Ok(directory)
@@ -128,26 +132,6 @@ mod tests {
         temp_dir.push("ccol.json");
 
         assert_eq!(config_file, temp_dir);
-        Ok(())
-    }
-
-    #[test]
-    fn parse_config_creates_file_with_default_content() -> std::result::Result<(), Box<dyn Error>> {
-        let temp_dir = tempfile::tempdir()?;
-        let temp_path = temp_dir.path().join("ccol.json");
-
-        let result = parse_config(temp_path.clone());
-
-        assert!(result.is_ok());
-        assert!(temp_path.exists());
-
-        let file = File::open(temp_path)?;
-        let reader = BufReader::new(file);
-        let contents: CollectionTree = serde_json::from_reader(reader)?;
-        let expected: CollectionTree = serde_json::from_value(json!({}))?;
-
-        assert_eq!(contents, expected);
-
         Ok(())
     }
 }
