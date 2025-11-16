@@ -1,4 +1,8 @@
-use std::io;
+use std::io::Write;
+use std::{
+    io,
+    process::{Command, Stdio},
+};
 
 use anyhow::{Context, Result};
 use args::Args;
@@ -63,6 +67,24 @@ fn main() -> Result<()> {
             .and_then(|mut clipboard| clipboard.set_contents(command.to_owned()))
             .map(|_| "Command copied to clipboard:")
             .unwrap_or_else(|_| "Unable to copy command to clipboard:");
+
+        let mut xclip = Command::new("xclip")
+            .arg("-selection")
+            .arg("clipboard")
+            .stdin(Stdio::piped())
+            .spawn()
+            .expect("Failed to start xclip process");
+
+        if let Some(mut stdin) = xclip.stdin.take() {
+            if let Err(e) = stdin.write_all(command.as_bytes()) {
+                eprintln!("Failed to write to xclip: {}", e);
+            }
+        }
+
+        let status = xclip.wait().expect("Failed to wait for xclip process");
+        if !status.success() {
+            eprintln!("xclip exited with status: {:?}", status);
+        }
 
         println!(
             "\n\n{}\n\n{}\n\n{}\n\n",

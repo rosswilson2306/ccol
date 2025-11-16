@@ -66,6 +66,13 @@ Example `ccol.json`
 CCOL_CONFIG_PATH=/Users/my-user/.config
 ```
 
+## Dependencies
+
+- `xclip`
+
+Due to issues with X11 not storing clipboard content after a process has terminated, `ccol` uses `xclip` to ensure command are successfully copied to
+the clipboard.
+
 ## TODO
 
 - install script
